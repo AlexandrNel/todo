@@ -12,10 +12,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch } from "@/redux/hooks";
 import { fetchCreatedTask } from "@/redux/slices/todosSlice";
 import { useTranslation } from "react-i18next";
+import { nanoid } from "@reduxjs/toolkit";
 
 interface Props {
   className?: string;
@@ -31,10 +31,9 @@ const AddTask: React.FC<Props> = ({ className }) => {
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   };
-  // Отрефакторить
   const handleSubmit = () => {
     const newTask = {
-      id: `temp-${uuidv4()}`,
+      id: nanoid(),
       userId: "",
       title: value,
       content: "",
