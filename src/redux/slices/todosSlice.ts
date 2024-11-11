@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createTask, getTasks, deleteTask, updateTask } from "@/api";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store";
 
@@ -18,36 +18,13 @@ enum Status {
   ERROR = "error",
 }
 
-const apiUrl = import.meta.env.VITE_API_URL
+const fetchTasks = createAsyncThunk("fetchTasks", getTasks);
+const fetchCreatedTask = createAsyncThunk("fetchCreatedTask", createTask);
+const fetchRemovedTask = createAsyncThunk("fetchRemovedTask", deleteTask);
+const fetchUpdatedTask = createAsyncThunk("fetchUpdatedTask", updateTask);
 
-const fetchTasks = createAsyncThunk("fetchTasks", async () => {
-  const { data } = await axios.get(`${apiUrl}/tasks`);
-  return data;
-});
-const fetchCreatedTask = createAsyncThunk(
-  "fetchCreatedTask",
-  async (task: Task) => {
-    const { data } = await axios.post(`${apiUrl}/tasks`, task);
-    return data;
-  }
-);
-const fetchRemovedTask = createAsyncThunk(
-  "fetchRemovedTask",
-  async (id: TaskId) => {
-    const { data } = await axios.delete(`${apiUrl}/tasks/${id}`);
-    return data as Task;
-  }
-);
-const fetchUpdatedTask = createAsyncThunk(
-  "fetchUpdatedTask",
-  async ({ id, task }: { id: TaskId; task: Partial<Task> }) => {
-    const { data } = await axios.patch(`${apiUrl}/tasks/${id}`, task);
-    return data;
-  }
-);
 interface TasksState {
   tasks: Task[];
-  isDeleted: boolean;
   deletedTask: Task | null;
   indexOfDeleted: number | null;
   status: "loading" | "success" | "error";
@@ -55,7 +32,6 @@ interface TasksState {
 
 const initialState: TasksState = {
   tasks: [],
-  isDeleted: false,
   indexOfDeleted: null,
   deletedTask: null,
   status: Status.LOADING,
@@ -75,13 +51,11 @@ export const todosSlice = createSlice({
         state.indexOfDeleted = state.tasks.indexOf(foundTask)
         state.deletedTask = foundTask
         state.tasks.splice(state.indexOfDeleted, 1)
-        state.isDeleted = true
       }
     },
     undoRemove: (state) => {
-      if (state.deletedTask && state.indexOfDeleted || state.deletedTask && state.indexOfDeleted === 0) { state.tasks.splice(state.indexOfDeleted, 0, state.deletedTask) }
+      if (state.deletedTask && (state.indexOfDeleted !== null)) { state.tasks.splice(state.indexOfDeleted, 0, state.deletedTask) }
       state.deletedTask = null
-      state.isDeleted = false
       state.indexOfDeleted = null
     }
   },
@@ -107,13 +81,11 @@ export const todosSlice = createSlice({
     // Remove Task
     builder.addCase(fetchRemovedTask.fulfilled, (state, action) => {
       state.tasks = state.tasks.filter((item) => item.id !== action.meta.arg);
-      state.isDeleted = false
       state.deletedTask = null
       state.indexOfDeleted = null
     });
     builder.addCase(fetchRemovedTask.rejected, (state) => {
       if (state.deletedTask && state.indexOfDeleted || state.deletedTask && state.indexOfDeleted === 0) { state.tasks.splice(state.indexOfDeleted, 0, state.deletedTask) }
-      state.isDeleted = false
       state.deletedTask = null
       state.indexOfDeleted = null
     });
@@ -134,7 +106,7 @@ export const todosSlice = createSlice({
 
 export const { setTaskStatus, removeTask, undoRemove } = todosSlice.actions;
 export { fetchTasks, fetchCreatedTask, fetchRemovedTask, fetchUpdatedTask };
-export const selectIsDeleted = (state: RootState) => state.todos.isDeleted
+export const selectIsDeleted = (state: RootState) => Boolean(state.todos.deletedTask)
 export const selectTasks = (state: RootState) => state.todos.tasks;
 export const selectDeletedTask = (state: RootState) => state.todos.deletedTask;
 export const selectIndexOfDeleted = (state: RootState) => state.todos.indexOfDeleted
