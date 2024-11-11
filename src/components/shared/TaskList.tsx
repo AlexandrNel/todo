@@ -2,11 +2,12 @@ import React from "react";
 import NotFoundImageLight from "../../assets/not-found-tasks-light.png";
 import NotFoundImageDark from "../../assets/not-found-tasks-dark.png";
 import { useTheme } from "./ThemeProvider";
-import { fetchTasks, selectTasks } from "@/redux/slices/todosSlice";
+import { fetchTasks, selectStatus, selectTasks } from "@/redux/slices/todosSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { selectFilter } from "@/redux/slices/filterSlice";
 import { cn } from "@/lib/utils";
 import { TaskItem } from '../shared'
+import SkeletonTask from "./SkeletonTask";
 
 interface Props {
   className?: string;
@@ -17,6 +18,7 @@ const TaskList: React.FC<Props> = ({ className }) => {
   const { sortBy, search } = useAppSelector(selectFilter);
   const { theme } = useTheme();
   const tasks = useAppSelector(selectTasks);
+  const status = useAppSelector(selectStatus)
   const sortedTasks = tasks
     .filter((task) => {
       switch (sortBy) {
@@ -34,7 +36,14 @@ const TaskList: React.FC<Props> = ({ className }) => {
     dispatch(fetchTasks())
   }, []);
 
-  if (!sortedTasks || sortedTasks.length === 0) {
+  if (status === 'loading') {
+    return (
+      <>
+        {[...Array(5)].map(() => <SkeletonTask />)}
+      </>
+    )
+  }
+  if (status === 'error') {
     return (
       <div>
         {theme === "light" ? (

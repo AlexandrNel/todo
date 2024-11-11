@@ -108,6 +108,7 @@ export const { setTaskStatus, removeTask, undoRemove } = todosSlice.actions;
 export { fetchTasks, fetchCreatedTask, fetchRemovedTask, fetchUpdatedTask };
 export const selectIsDeleted = (state: RootState) => Boolean(state.todos.deletedTask)
 export const selectTasks = (state: RootState) => state.todos.tasks;
+export const selectStatus = (state: RootState) => state.todos.status;
 export const selectDeletedTask = (state: RootState) => state.todos.deletedTask;
 export const selectIndexOfDeleted = (state: RootState) => state.todos.indexOfDeleted
 export default todosSlice.reducer;
